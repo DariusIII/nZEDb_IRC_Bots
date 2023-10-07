@@ -1,6 +1,9 @@
 <?php
 namespace nzedb\db;
 
+use PDO;
+use PDOStatement;
+
 /**
  * Class for handling connection to database (MySQL or PostgreSQL) using PDO.
  *
@@ -12,30 +15,28 @@ namespace nzedb\db;
  */
 class DB extends \PDO
 {
-	/**
-	 * @var object Instance of PDO class.
-	 */
-	private static $pdo = null;
+	
+	private static ?object $pdo = null;
 
 	/**
 	 * @var string Lower-cased name of DBMS in use.
 	 */
-	private $DbSystem;
+	private string $DbSystem;
 
 	/**
 	 * @var string Version of the Db server.
 	 */
-	private $dbVersion;
+	private string $dbVersion;
 
 	/**
 	 * @var string	Stored copy of the dsn used to connect.
 	 */
-	private $dsn;
+	private string $dsn;
 
 	/**
 	 * @var array    Options passed into the constructor or defaulted.
 	 */
-	private $opts;
+	private array $opts;
 
 	/**
 	 * Constructor. Sets up all necessary properties. Instantiates a PDO object
@@ -71,7 +72,7 @@ class DB extends \PDO
 		return self::$pdo;
 	}
 
-	public function checkDbExists ($name = null)
+	public function checkDbExists ($name = null): bool
 	{
 		if (empty($name)) {
 			$name = $this->opts['dbname'];
@@ -98,7 +99,7 @@ class DB extends \PDO
 	/**
 	 * @return bool Whether the Db is definitely on the local machine.
 	 */
-	public function isLocalDb ()
+	public function isLocalDb(): bool
 	{
 		if (!empty($this->opts['dbsock']) || $this->opts['dbhost'] == 'localhost') {
 			return true;
@@ -119,7 +120,7 @@ class DB extends \PDO
 	/**
 	 * Init PDO instance.
 	 */
-	private function initialiseDatabase()
+	private function initialiseDatabase(): void
 	{
 		if (!empty($this->opts['dbsock'])) {
 			$dsn = $this->DbSystem . ':unix_socket=' . $this->opts['dbsock'];
@@ -152,7 +153,7 @@ class DB extends \PDO
 			if ($found) {
 				try {
 					self::$pdo->query("DROP DATABASE " . $this->opts['dbname']);
-				} catch (Exception $e) {
+				} catch (\Exception $e) {
 					throw new \RuntimeException("Error trying to drop your old database: '{$this->opts['dbname']}'", 2);
 				}
 				$found = self::checkDbExists();
@@ -190,12 +191,12 @@ class DB extends \PDO
 	/**
 	 * Echo error, optionally exit.
 	 *
-	 * @param string $error    The error message.
-	 * @param string $method   The method where the error occured.
-	 * @param int    $severity The severity of the error.
-	 * @param bool   $exit     Exit or not?
+	 * @param  string  $error    The error message.
+	 * @param  string  $method   The method where the error occured.
+	 * @param  int  $severity The severity of the error.
+	 * @param  bool  $exit     Exit or not?
 	 */
-	protected function echoError($error, $method, $severity, $exit = false)
+	protected function echoError(string $error, string $method, int $severity, bool $exit = false): void
 	{
 		echo "($method) $error\n";
 
@@ -207,7 +208,7 @@ class DB extends \PDO
 	/**
 	 * @return string mysql or pgsql.
 	 */
-	public function DbSystem()
+	public function DbSystem(): string
 	{
 		return $this->DbSystem;
 	}
@@ -215,29 +216,25 @@ class DB extends \PDO
 	/**
 	 * Returns a string, escaped with single quotes, false on failure. http://www.php.net/manual/en/pdo.quote.php
 	 *
-	 * @param string $str
+	 * @param  string  $str
 	 *
 	 * @return string
 	 */
-	public function escapeString($str)
+	public function escapeString(string $str): string
 	{
-		if (is_null($str)) {
-			return 'NULL';
-		}
-
 		return self::$pdo->quote($str);
 	}
 
 	/**
 	 * Formats a 'like' string. ex.(LIKE '%chocolate%')
 	 *
-	 * @param string $str    The string.
-	 * @param bool   $left   Add a % to the left.
-	 * @param bool   $right  Add a % to the right.
+	 * @param  string  $str    The string.
+	 * @param  bool  $left   Add a % to the left.
+	 * @param  bool  $right  Add a % to the right.
 	 *
 	 * @return string
 	 */
-	public function likeString($str, $left=true, $right=true)
+	public function likeString(string $str, bool $left=true, bool $right=true): string
 	{
 		return (
 			($this->DbSystem === 'mysql' ? 'LIKE ' : 'ILIKE ') .
@@ -254,19 +251,19 @@ class DB extends \PDO
 	 *
 	 * @return bool
 	 */
-	public function isInitialised()
+	public function isInitialised(): bool
 	{
 		return (self::$pdo instanceof \PDO);
 	}
-
+	
 	/**
 	 * For inserting a row. Returns last insert ID. queryExec is better if you do not need the id.
 	 *
-	 * @param string $query
+	 * @param  string  $query
 	 *
-	 * @return bool
+	 * @return bool|array
 	 */
-	public function queryInsert($query)
+	public function queryInsert(string $query): bool|array
 	{
 		if (empty($query)) {
 			return false;
@@ -276,7 +273,7 @@ class DB extends \PDO
 		$error = '';
 		while($i < 11) {
 			$result = $this->queryExecHelper($query, true);
-			if (is_array($result) && isset($result['deadlock'])) {
+			if (isset($result['deadlock'])) {
 				$error = $result['message'];
 				if ($result['deadlock'] === true) {
 					$this->echoError("A Deadlock or lock wait timeout has occurred, sleeping.(" . ($i-1) . ")", 'queryInsert', 4);
@@ -294,15 +291,15 @@ class DB extends \PDO
 		}
 		return false;
 	}
-
+	
 	/**
 	 * Used for deleting, updating (and inserting without needing the last insert id).
 	 *
-	 * @param string $query
+	 * @param  string  $query
 	 *
-	 * @return bool
+	 * @return bool|array
 	 */
-	public function queryExec($query)
+	public function queryExec(string $query): bool|array
 	{
 		if (empty($query)) {
 			return false;
@@ -312,7 +309,7 @@ class DB extends \PDO
 		$error = '';
 		while($i < 11) {
 			$result = $this->queryExecHelper($query);
-			if (is_array($result) && isset($result['deadlock'])) {
+			if (isset($result['deadlock'])) {
 				$error = $result['message'];
 				if ($result['deadlock'] === true) {
 					$this->echoError("A Deadlock or lock wait timeout has occurred, sleeping.(" . ($i-1) . ")", 'queryExec', 4);
@@ -334,12 +331,12 @@ class DB extends \PDO
 	/**
 	 * Helper method for queryInsert and queryExec, checks for deadlocks.
 	 *
-	 * @param string $query
-	 * @param bool   $insert
+	 * @param  string  $query
+	 * @param  bool  $insert
 	 *
 	 * @return array
 	 */
-	protected function queryExecHelper($query, $insert = false)
+	protected function queryExecHelper(string $query, bool $insert = false): array
 	{
 		try {
 			if ($insert === false ) {
@@ -369,7 +366,7 @@ class DB extends \PDO
 			) {
 				return array('deadlock' => true, 'message' => $e->getMessage());
 			}
-var_dump($e->getMessage());
+			var_dump($e->getMessage());
 			return array ('deadlock' => false, 'message' => $e->getMessage());
 		}
 	}
@@ -377,11 +374,11 @@ var_dump($e->getMessage());
 	/**
 	 * Direct query. Return the affected row count. http://www.php.net/manual/en/pdo.exec.php
 	 *
-	 * @param string $query
+	 * @param  string  $query
 	 *
 	 * @return bool|int
 	 */
-	public function Exec($query)
+	public function Exec(string $query): bool|int
 	{
 		if (empty($query)) {
 			return false;
@@ -395,18 +392,17 @@ var_dump($e->getMessage());
 			return false;
 		}
 	}
-
-
+	
 	/**
 	 * Returns an array of result (empty array if no results or an error occurs)
 	 * Optional: Pass true to cache the result with memcache.
 	 *
-	 * @param string $query    SQL to execute.
-	 * @param bool   $memcache Indicates if memcache should you be used if available.
+	 * @param  string  $query  SQL to execute.
+	 * @param  bool  $memcache  Indicates if memcache should you be used if available.
 	 *
-	 * @return array Array of results (possibly empty) on success, empty array on failure.
+	 * @return bool|array Array of results (possibly empty) on success, empty array on failure.
 	 */
-	public function query($query, $memcache = false)
+	public function query(string $query, $memcache = false): bool|array
 	{
 		if (empty($query)) {
 			return false;
@@ -420,11 +416,11 @@ var_dump($e->getMessage());
 	/**
 	 * Main method for creating results as an array.
 	 *
-	 * @param string $query SQL to execute.
+	 * @param  string  $query SQL to execute.
 	 *
 	 * @return array|boolean Array of results on success or false on failure.
 	 */
-	public function queryArray($query)
+	public function queryArray(string $query): bool|array
 	{
 		if (empty($query)) {
 			return false;
@@ -446,11 +442,11 @@ var_dump($e->getMessage());
 	/**
 	 * Query without returning an empty array like our function query(). http://php.net/manual/en/pdo.query.php
 	 *
-	 * @param string $query The query to run.
+	 * @param  string  $query The query to run.
 	 *
 	 * @return bool|PDO object
 	 */
-	public function queryDirect($query)
+	public function queryDirect(string $query): PDO|bool
 	{
 		if (empty($query)) {
 			return false;
@@ -468,11 +464,11 @@ var_dump($e->getMessage());
 	/**
 	 * Returns the first row of the query.
 	 *
-	 * @param string $query
+	 * @param  string  $query
 	 *
 	 * @return array|bool
 	 */
-	public function queryOneRow($query)
+	public function queryOneRow(string $query): bool|array
 	{
 		$rows = $this->query($query);
 
@@ -486,11 +482,11 @@ var_dump($e->getMessage());
 	/**
 	 * Returns results as an array but without an empty array like our query() function.
 	 *
-	 * @param string $query The query to execute.
+	 * @param  string  $query The query to execute.
 	 *
 	 * @return array|boolean Array of results on success, false otherwise.
 	 */
-	public function queryAssoc($query)
+	public function queryAssoc(string $query): bool|array
 	{
 		if ($query == '') {
 			return false;
@@ -511,12 +507,12 @@ var_dump($e->getMessage());
 	/**
 	 * Optimises/repairs tables on mysql. Vacuum/analyze on postgresql.
 	 *
-	 * @param bool   $admin
-	 * @param string $type
+	 * @param  bool  $admin
+	 * @param  string  $type
 	 *
 	 * @return int
 	 */
-	public function optimise($admin = false, $type = '')
+	public function optimise(bool $admin = false, string $type = ''): int
 	{
 		$tablecnt = 0;
 		if ($this->DbSystem === 'mysql') {
@@ -570,17 +566,17 @@ var_dump($e->getMessage());
 	/**
 	 * Check if the tables exists for the groupid, make new tables and set status to 1 in groups table for the id.
 	 *
-	 * @param int $grpid
+	 * @param  int  $grpid
 	 *
 	 * @return bool
 	 */
-	public function newtables($grpid)
+	public function newtables(int $grpid): bool
 	{
 		$s = new \Sites();
 		$site = $s->get();
-		$DoPartRepair = ($site->partrepair == '0') ? false : true;
+		$DoPartRepair = ! (($site->partrepair == '0'));
 
-		if (!is_null($grpid) && is_numeric($grpid)) {
+		if (is_numeric($grpid)) {
 			$binaries = $parts = $collections = $partrepair = false;
 			if ($this->DbSystem === 'pgsql') {
 				$like = ' (LIKE collections INCLUDING ALL)';
@@ -601,13 +597,13 @@ var_dump($e->getMessage());
 					foreach ($tables as $row) {
 						$tbl = $row['name'];
 						$tblnew = '';
-						if (strpos($tbl, '_collections') !== false) {
+						if (str_contains($tbl, '_collections')) {
 							$tblnew = 'collections_' . str_replace('_collections', '', $tbl);
-						} else if (strpos($tbl, '_binaries') !== false) {
+						} else if (str_contains($tbl, '_binaries')) {
 							$tblnew = 'binaries_' . str_replace('_binaries', '', $tbl);
-						} else if (strpos($tbl, '_parts') !== false) {
+						} else if (str_contains($tbl, '_parts')) {
 							$tblnew = 'parts_' . str_replace('_parts', '', $tbl);
-						} else if (strpos($tbl, '_partrepair') !== false) {
+						} else if (str_contains($tbl, '_partrepair')) {
 							$tblnew = 'partrepair_' . str_replace('_partrepair', '', $tbl);
 						}
 						if ($tblnew != '') {
@@ -702,7 +698,7 @@ var_dump($e->getMessage());
 	 *
 	 * @return bool
 	 */
-	public function beginTransaction()
+	public function beginTransaction(): bool
 	{
 		return self::$pdo->beginTransaction();
 	}
@@ -712,7 +708,7 @@ var_dump($e->getMessage());
 	 *
 	 * @return bool
 	 */
-	public function Commit()
+	public function Commit(): bool
 	{
 		return self::$pdo->commit();
 	}
@@ -722,7 +718,7 @@ var_dump($e->getMessage());
 	 *
 	 * @return bool
 	 */
-	public function Rollback()
+	public function Rollback(): bool
 	{
 		return self::$pdo->rollBack();
 	}
@@ -733,7 +729,7 @@ var_dump($e->getMessage());
 	 *
 	 * @return bool|string
 	 */
-	public function from_unixtime($utime)
+	public function from_unixtime($utime): bool|string
 	{
 		if ($this->DbSystem === 'mysql') {
 			return 'FROM_UNIXTIME(' . $utime . ')';
@@ -744,11 +740,12 @@ var_dump($e->getMessage());
 
 	/**
 	 * PHP interpretation of mysql's unix_timestamp method.
-	 * @param string $date
+	 *
+	 * @param  string $date
 	 *
 	 * @return int
 	 */
-	public function unix_timestamp($date)
+	public function unix_timestamp(string $date): int
 	{
 		return strtotime($date);
 	}
@@ -758,12 +755,12 @@ var_dump($e->getMessage());
 	 * MySQL: UNIX_TIMESTAMP(column_name) AS outputName
 	 * PgSQL: EXTRACT('EPOCH' FROM column_name)::INT AS outputName;
 	 *
-	 * @param string $column     The datetime column.
-	 * @param string $outputName The name to store the SQL data into. (the word after AS)
+	 * @param  string  $column     The datetime column.
+	 * @param  string  $outputName The name to store the SQL data into. (the word after AS)
 	 *
 	 * @return string
 	 */
-	public function unix_timestamp_column($column, $outputName = 'unix_time')
+	public function unix_timestamp_column(string $column, string $outputName = 'unix_time'): string
 	{
 		return ($this->DbSystem === 'mysql'
 			?
@@ -779,7 +776,7 @@ var_dump($e->getMessage());
 	 *
 	 * @return string
 	 */
-	public function uuid()
+	public function uuid(): string
 	{
 		return sprintf(
 			'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -799,16 +796,16 @@ var_dump($e->getMessage());
 	 * NOTE: Restart does not happen if PDO is not using exceptions (PHP's default configuration).
 	 * In this case check the return value === false.
 	 *
-	 * @param boolean $restart Whether an attempt should be made to reinitialise the Db object on failure.
+	 * @param  boolean  $restart Whether an attempt should be made to reinitialise the Db object on failure.
 	 *
 	 * @return boolean
 	 */
-	public function ping($restart = false)
+	public function ping(bool $restart = false): bool
 	{
 		try {
 			return (bool) self::$pdo->query('SELECT 1+1');
 		} catch (\PDOException $e) {
-			if ($restart == true) {
+			if ($restart) {
 				$this->initialiseDatabase();
 			}
 			return false;
@@ -821,14 +818,14 @@ var_dump($e->getMessage());
 	 *
 	 * Ideally the signature would have array before $options but that causes a strict warning.
 	 *
-	 * @param string $query SQL query to run, with optional place holders.
-	 * @param array $options Driver options.
+	 * @param  string  $query SQL query to run, with optional place holders.
+	 * @param  array  $options Driver options.
 	 *
 	 * @return false|PDOstatement on success false on failure.
 	 *
 	 * @link http://www.php.net/pdo.prepare.php
 	 */
-	public function Prepare($query, $options = array())
+	public function Prepare(string $query, array $options = []): false|\PDOStatement
 	{
 		try {
 			$PDOstatement = self::$pdo->prepare($query, $options);
@@ -842,11 +839,11 @@ var_dump($e->getMessage());
 	/**
 	 * Retrieve db attributes http://us3.php.net/manual/en/pdo.getattribute.php
 	 *
-	 * @param int $attribute
+	 * @param  int  $attribute
 	 *
 	 * @return bool|mixed
 	 */
-	public function getAttribute($attribute)
+	public function getAttribute(int $attribute): mixed
 	{
 		if ($attribute != '') {
 			try {
@@ -864,18 +861,18 @@ var_dump($e->getMessage());
 	 *
 	 * @return string
 	 */
-	public function getDbVersion ()
+	public function getDbVersion (): string
 	{
 		return $this->dbVersion;
 	}
 
 	/**
-	 * @param string $requiredVersion The minimum version to compare against
+	 * @param  string  $requiredVersion The minimum version to compare against
 	 *
 	 * @return bool|null       TRUE if Db version is greater than or eaqual to $requiredVersion,
 	 * false if not, and null if the version isn't available to check against.
 	 */
-	public function isDbVersionAtLeast ($requiredVersion)
+	public function isDbVersionAtLeast (string $requiredVersion): ?bool
 	{
 		if (empty($this->dbVersion)) {
 			return null;
@@ -886,7 +883,7 @@ var_dump($e->getMessage());
 	/**
 	 * Performs the fetch from the Db server and stores the resulting Major.Minor.Version number.
 	 */
-	private function fetchDbVersion ()
+	private function fetchDbVersion (): void
 	{
 		$result = $this->queryOneRow("SELECT VERSION() AS version");
 		if (!empty($result)) {

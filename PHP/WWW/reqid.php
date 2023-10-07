@@ -1,5 +1,5 @@
 <?php
-define('req_settings', true);
+	const req_settings = true;
 
 $preData = false;
 

@@ -11,29 +11,29 @@ class ReqIRCScraper extends IRCClient
 	 * @var array
 	 * @access protected
 	 */
-	protected $CurPre;
+	protected array $CurPre;
 
 	/**
 	 * Run this in silent mode (no text output).
 	 * @var bool
 	 * @access protected
 	 */
-	protected $silent;
+	protected bool $silent;
 
 	/**
 	 * @var nzedb\db\DB
 	 * @access protected
 	 */
-	protected $db;
+	protected \nzedb\db\DB $db;
 
 	/**
 	 * Construct
 	 *
-	 * @param bool         $silent       Run this in silent mode (no text output).
+	 * @param  bool  $silent       Run this in silent mode (no text output).
 	 *
 	 * @access public
 	 */
-	public function __construct(&$silent = false)
+	public function __construct(bool &$silent = false)
 	{
 		$this->db = new nzedb\db\DB();
 		$this->silent = $silent;
@@ -47,7 +47,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function startScraping()
+	protected function startScraping(): void
 	{
 		// Connect to IRC.
 		if ($this->connect(REQID_BOT_HOST, REQID_BOT_PORT, REQID_BOT_ENCRYPTION) === false) {
@@ -94,15 +94,15 @@ class ReqIRCScraper extends IRCClient
 	/**
 	 * Check the similarity between 2 words.
 	 *
-	 * @param string $word1
-	 * @param string $word2
-	 * @param int    $similarity
+	 * @param  string  $word1
+	 * @param  string  $word2
+	 * @param  int  $similarity
 	 *
 	 * @return bool
 	 *
 	 * @access protected
 	 */
-	protected function checkSimilarity($word1, $word2, $similarity = 49)
+	protected function checkSimilarity(string $word1, string $word2, int $similarity = 49): bool
 	{
 		similar_text($word1, $word2, $percent);
 		if ($percent > $similarity) {
@@ -115,7 +115,7 @@ class ReqIRCScraper extends IRCClient
 	 * Check channel and poster, send message to right method.
 	 * access protected
 	 */
-	protected function processChannelMessages()
+	protected function processChannelMessages(): void
 	{
 		$channel = strtolower($this->_channelData['channel']);
 		$poster  = strtolower($this->_channelData['nickname']);
@@ -206,7 +206,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_erotica()
+	protected function ab_erotica(): void
 	{
 		//That was awesome [*Anonymous*] Shall we do it again? ReqId:[326264] [HD-Clip] [FULL 16x50MB TeenSexMovs.14.03.30.Daniela.XXX.720p.WMV-iaK] Filenames:[iak-teensexmovs-140330] Comments:[0] Watchers:[0] Total Size:[753MB] Points Earned:[54] [Pred 3m 20s ago]
 		//That was awesome [*Anonymous*] Shall we do it again? ReqId:[326663] [x264] [FULL 53x100MB Young.Ripe.Mellons.10.XXX.720P.WEBRIP.X264-GUSH] Filenames:[gush.yrmellons10] Comments:[1] Watchers:[0] Total Size:[4974MB] Points Earned:[354] [Pred 7m 5s ago] [NUKED]
@@ -230,7 +230,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_flac()
+	protected function ab_flac(): void
 	{
 		//Thank You [*Anonymous*] Request Filled! ReqId:[42614] [FULL 10x15MB You_Blew_It-Keep_Doing_What_Youre_Doing-CD-FLAC-2014-WRE] Requested by:[*Anonymous* 21s ago] Comments:[0] Watchers:[0] Points Earned:[10] [Pred 3m 16s ago]
 		if (preg_match('/Request\s+Filled!\s+ReqId:\[(?P<reqid>\d+)\]\s+\[FULL\s+(?P<files>\d+x\d+[KMGTP]?B)\s+(?P<title>.+?)\].*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->_channelData['message'], $matches)) {
@@ -253,7 +253,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_moovee()
+	protected function ab_moovee(): void
 	{
 		//Thank You [*Anonymous*] Request Filled! ReqId:[140445] [FULL 94x50MB Burning.Daylight.2010.720p.BluRay.x264-SADPANDA] Requested by:[*Anonymous* 3h 29m ago] Comments:[0] Watchers:[0] Points Earned:[314] [Pred 4h 29m ago]
 		if (preg_match('/ReqId:\[(?P<reqid>\d+)\]\s+\[FULL\s+(?P<files>\d+x\d+[MGPTK]?B)\s+(?P<title>.+?)\]\s+.*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->_channelData['message'], $matches)) {
@@ -276,7 +276,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_foreign()
+	protected function ab_foreign(): void
 	{
 		//Thank You [*Anonymous*] Request Filled! ReqId:[61525] [Movie] [FULL 95x50MB Wadjda.2012.PAL.MULTI.DVDR-VIAZAC] Requested by:[*Anonymous* 5m 13s ago] Comments:[0] Watchers:[0] Points Earned:[317] [Pred 8m 27s ago]
 		if (preg_match('/ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<category>.+?)\]\s+\[FULL\s+(?P<files>\d+x\d+[MGPTK]?B)\s+(?P<title>.+?)\]\s+.*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->_channelData['message'], $matches)) {
@@ -299,7 +299,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_teevee()
+	protected function ab_teevee(): void
 	{
 		//Thank You [*Anonymous*] Request Filled! ReqId:[183520] [FULL 19x50MB Louis.Therouxs.LA.Stories.S01E02.720p.HDTV.x264-FTP] Requested by:[*Anonymous* 53s ago] Comments:[0] Watchers:[0] Points Earned:[64] [Pred 3m 45s ago]
 		if (preg_match('/Request\s+Filled!\s+ReqId:\[(?P<reqid>\d+)\]\s+\[FULL\s+(?P<files>\d+x\d+[KMGPT]?B)\s+(?P<title>.+?)\].*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->_channelData['message'], $matches)) {
@@ -323,7 +323,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_console_ps3()
+	protected function ab_console_ps3(): void
 	{
 		//[Anonymous person filling request for: FULL 56 Ragnarok.Odyssey.ACE.PS3-iMARS NTSC BLURAY imars-ragodyace-ps3 56x100MB by Khaine13 on 2014-03-29 13:14:12][ReqID: 4888][You get a bonus of 6 for a total points earning of: 62 for filling with 10% par2s!][Your score will be adjusted once you have -filled 4888]
 		if (preg_match('/\s+FULL\s+\d+\s+(?P<title>.+?)\s+(?P<files>\d+x\d+[KMGTP]?B)\s+.+?\]\[ReqID:\s+(?P<reqid>\d+)\]\[/i', $this->_channelData['message'], $matches)) {
@@ -337,11 +337,11 @@ class ReqIRCScraper extends IRCClient
 	/**
 	 * Gets new PRE from #a.b.games.wii
 	 *
-	 * @param string $poster  The name of the poster.
+	 * @param  string  $poster  The name of the poster.
 	 *
 	 * @access protected
 	 */
-	protected function ab_games_wii(&$poster)
+	protected function ab_games_wii(string &$poster): void
 	{
 		//A new NZB has been added: Go_Diego_Go_Great_Dinosaur_Rescue_PAL_WII-ZER0 PAL DVD5 zer0-gdggdr 93x50MB - To download this file: -sendnzb 12811
 		if ($this->checkSimilarity($poster, 'googlebot') && preg_match('/A\s+new\s+NZB\s+has\s+been\s+added:\s+(?P<title>.+?)\s+.+?(?P<files>\d+x\d+[KMGTP]?B)\s+-\s+To.+?file:\s+-sendnzb\s+(?P<reqid>\d+)\s*/i', $this->_channelData['message'], $matches)) {
@@ -362,11 +362,11 @@ class ReqIRCScraper extends IRCClient
 	/**
 	 * Gets new PRE from #a.b.games.xbox360
 	 *
-	 * @param string $poster  The name of the poster.
+	 * @param  string  $poster  The name of the poster.
 	 *
 	 * @access protected
 	 */
-	protected function ab_games_xbox360(&$poster)
+	protected function ab_games_xbox360(string &$poster): void
 	{
 		//A new NZB has been added: South.Park.The.Stick.of.Truth.PAL.XBOX360-COMPLEX PAL DVD9 complex-south.park.sot 74x100MB - To download this file: -sendnzb 19909
 		if ($this->checkSimilarity($poster, 'googlebot') && preg_match('/A\s+new\s+NZB\s+has\s+been\s+added:\s+(?P<title>.+?)\s+.+?(?P<files>\d+x\d+[KMGTP]?B)\s+-\s+To.+?file:\s+-sendnzb\s+(?P<reqid>\d+)\s*/i', $this->_channelData['message'], $matches)) {
@@ -389,7 +389,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_sony_psp()
+	protected function ab_sony_psp(): void
 	{
 		//A NZB is available: Satomi_Hakkenden_Hachitama_no_Ki_JPN_PSP-MOEMOE JAP UMD moe-satomi 69x20MB - To download this file: -sendnzb 21924
 		if (preg_match('/A NZB is available:\s(?P<title>.+?)\s+.+?(?P<files>\d+x\d+[KMGPT]?B)\s+-.+?file:\s+-sendnzb\s+(?P<reqid>\d+)\s*/i', $this->_channelData['message'], $matches)) {
@@ -405,7 +405,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function ab_games_nintendods()
+	protected function ab_games_nintendods(): void
 	{
 		//NEW [NDS] PRE: Honda_ATV_Fever_USA_NDS-EXiMiUS
 		if (preg_match('/NEW\s+\[NDS\]\s+PRE:\s+(?P<title>.+)/i', $this->_channelData['message'], $matches)) {
@@ -421,7 +421,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function scnzb()
+	protected function scnzb(): void
 	{
 		//[Complete][512754] Formula1.2014.Malaysian.Grand.Prix.Team.Principals.Press.Conference.720p.HDTV.x264-W4F  NZB: http://scnzb.eu/1pgOmwj
 		if (preg_match('/\[Complete\]\[(?P<reqid>\d+)\]\s*(?P<title>.+?)\s+NZB:/i', $this->_channelData['message'], $matches)) {
@@ -437,7 +437,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function inner_sanctum()
+	protected function inner_sanctum(): void
 	{
 		//[FILLED] [ 341953 | Emilie_Simon-Mue-CD-FR-2014-JUST | 16x79 | MP3 | *Anonymous* ] [ Pred 10m 54s ago ]
 		if (preg_match('/FILLED\]\s+\[\s+(?P<reqid>\d+)\s+\|\s+(?P<title>.+?)\s+\|\s+(?P<files>\d+x\d+)\s+\|\s+(?P<category>.+?)\s+\|\s+.+?\s+\]\s+\[\s+Pred\s+(?P<predago>.+?)\s+ago\s+\]/i', $this->_channelData['message'], $matches)) {
@@ -455,7 +455,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function alt_bin(&$channel)
+	protected function alt_bin(&$channel): void
 	{
 		//Thank you<Bijour> Req Id<137732> Request<The_Blueprint-Phenomenology-(Retail)-2004-KzT *Pars Included*> Files<19> Dates<Req:2014-03-24 Filling:2014-03-29> Points<Filled:1393 Score:25604>
 		if (preg_match('/Req.+?Id.*?<.*?(?P<reqid>\d+).*?>.*?Request.*?<\d{0,2}(?P<title>.+?)(\s+\*Pars\s+Included\*\d{0,2}>|\d{0,2}>)\s+Files<(?P<files>\d+)>/i', $this->_channelData['message'], $matches)) {
@@ -473,7 +473,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function checkForDupe()
+	protected function checkForDupe(): bool
 	{
 		if ($this->db->queryOneRow(sprintf('SELECT reqid FROM predb WHERE title = %s', $this->CurPre['title'])) === false) {
 			$this->insertNewPre();
@@ -487,7 +487,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function insertNewPre()
+	protected function insertNewPre(): void
 	{
 		$this->db->ping(true);
 
@@ -510,7 +510,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function updatePre()
+	protected function updatePre(): void
 	{
 		$this->db->ping(true);
 
@@ -531,11 +531,11 @@ class ReqIRCScraper extends IRCClient
 	/**
 	 * Echo new or update pre to CLI.
 	 *
-	 * @param bool $new
+	 * @param  bool  $new
 	 *
 	 * @access protected
 	 */
-	protected function doEcho($new = true)
+	protected function doEcho(bool $new = true): void
 	{
 		if (!$this->silent) {
 
@@ -558,7 +558,7 @@ class ReqIRCScraper extends IRCClient
 	 *
 	 * @access protected
 	 */
-	protected function resetPreVariables()
+	protected function resetPreVariables(): void
 	{
 		$this->CurPre =
 			array(

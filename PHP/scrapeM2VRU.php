@@ -1,7 +1,7 @@
 <?php
-
-define('pre_settings', true);
-define('m2v_settings', true);
+	
+	const pre_settings = true;
+	const m2v_settings = true;
 require('settings.php');
 require_once('Classes/DB.php');
 
@@ -93,7 +93,7 @@ for (;;) {
 	sleep_printout(M2V_SLEEP_TIME);
 }
 
-function sleep_printout($time)
+function sleep_printout($time): void
 {
 	$time--;
 	if (!$time) {
@@ -108,12 +108,12 @@ function sleep_printout($time)
 /**
  * Use cURL To download a web page into a string.
  *
- * @param string $url       The URL to download.
- * @param bool   $debug     Show debug info.
+ * @param  string  $url       The URL to download.
+ * @param  bool  $debug     Show debug info.
  *
- * @return bool|mixed
+ * @return string|bool
  */
-function getUrl ($url, $debug = false)
+function getUrl (string $url, bool $debug = false): string|bool
 {
 	$ch      = curl_init();
 	$options = array(

@@ -5,20 +5,20 @@ class fetchWeb
 	/**
 	 * @var nzedb\db\DB
 	 */
-	protected $_db;
+	protected \nzedb\db\DB $_db;
 
-	protected $_done = 0;
+	protected int $_done = 0;
 
 	/**
 	 * Number of active Web Sources.
 	 */
-	protected $_activeSources = 0;
+	protected int $_activeSources = 0;
 
 	/**
 	 * The sleep time in between sources is totalSleepTime divided by activeSources.
 	 * @var float
 	 */
-	protected $_sleepTime;
+	protected int|float $_sleepTime;
 
 	public function __construct()
 	{
@@ -59,7 +59,7 @@ class fetchWeb
 	/**
 	 * Get pre from SrrDB.
 	 */
-	protected function _retrieveSrr()
+	protected function _retrieveSrr(): void
 	{
 		echo "Fetching SrrDB\n";
 		$data = $this->_getUrl("http://www.srrdb.com/feed/srrs");
@@ -84,7 +84,7 @@ class fetchWeb
 	/**
 	 * Get pre from Xrel.
 	 */
-	protected function _retrieveXrel()
+	protected function _retrieveXrel(): void
 	{
 		echo "Fetching Xrel\n";
 		$data = $this->_getUrl("https://api.xrel.to/v2/release/latest.json?per_page=100");
@@ -112,7 +112,7 @@ class fetchWeb
 	/**
 	 * Get pre from XrelP2P.
 	 */
-	protected function _retrieveXrelP2P()
+	protected function _retrieveXrelP2P(): void
 	{
 		echo "Fetching XrelP2P\n";
 		$data = $this->_getUrl("https://api.xrel.to/v2/p2p/releases.json?per_page=100");
@@ -140,7 +140,7 @@ class fetchWeb
 		echo "Update from XrelP2P failed.\n";
 	}
 
-	protected function _verifyPreData(&$matches)
+	protected function _verifyPreData(&$matches): void
 	{
 		// If the title is too short, don't bother.
 		if (strlen($matches['title']) < 15) {
@@ -169,7 +169,7 @@ class fetchWeb
 					$this->_db->escapeString($matches['source']),
 					((isset($matches['requestid']) && is_numeric($matches['requestid']) ? $matches['requestid'] : 0)),
 					((isset($matches['groupid']) && is_numeric($matches['groupid'])) ? $matches['groupid'] : 0),
-					((isset($matches['files']) && !empty($matches['files'])) ? $this->_db->escapeString($matches['files']) : 'NULL'),
+					((!empty($matches['files'])) ? $this->_db->escapeString($matches['files']) : 'NULL'),
 					(isset($matches['filename']) ? $this->_db->escapeString($matches['filename']) : $this->_db->escapeString('')),
 					((isset($matches['nuked']) && is_numeric($matches['nuked'])) ? $matches['nuked'] : 0),
 					((isset($matches['reason']) && !empty($matches['nukereason'])) ? $this->_db->escapeString($matches['nukereason']) : 'NULL')
@@ -205,7 +205,8 @@ class fetchWeb
 		}
 	}
 
-	protected function _updateString($sqlKey, &$oldValue, &$newValue, $escape = true)
+	
+	protected function _updateString($sqlKey, &$oldValue, &$newValue, $escape = true): string
 	{
 		return ((empty($oldValue) && !empty($newValue))
 			? ($sqlKey . ' = ' . ($escape ? $this->_db->escapeString($newValue) : $newValue) . ', ')
@@ -216,42 +217,31 @@ class fetchWeb
 	/**
 	 * Use cURL To download a web page into a string.
 	 *
-	 * @param string $url       The URL to download.
-	 * @param string $method    get/post
-	 * @param string $postdata  If using POST, post your POST data here.
-	 * @param string $language  Use alternate langauge in header.
-	 * @param bool   $debug     Show debug info.
-	 * @param string $userAgent User agent.
-	 * @param string $cookie    Cookie.
+	 * @param  string  $url       The URL to download.
+	 * @param  string  $method    get/post
+	 * @param  string  $postdata  If using POST, post your POST data here.
+	 * @param  string  $language  Use alternate langauge in header.
+	 * @param  bool  $debug     Show debug info.
+	 * @param  string  $userAgent User agent.
+	 * @param  string  $cookie    Cookie.
 	 *
 	 * @return bool|mixed
 	 */
 	protected function &_getUrl (
-		$url,
-		$method = 'get',
-		$postdata = '',
-		$language = 'en',
-		$debug = false,
-		$userAgent = 'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.102011-10-16 20:23:10',
-		$cookie = 'foo=bar')
+		string $url,
+		string $method = 'get',
+		string $postdata = '',
+		string $language = 'en',
+		bool $debug = false,
+		string $userAgent = 'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.102011-10-16 20:23:10',
+		string $cookie = 'foo=bar'): mixed
 	{
-		switch ($language) {
-			case 'fr':
-			case 'fr-fr':
-				$language = "fr-fr";
-				break;
-			case 'de':
-			case 'de-de':
-				$language = "de-de";
-				break;
-			case 'en':
-				$language = 'en';
-				break;
-			case '':
-			case 'en-us':
-			default:
-				$language = "en-us";
-		}
+		$language = match ($language) {
+			'fr', 'fr-fr' => "fr-fr",
+			'de', 'de-de' => "de-de",
+			'en' => 'en',
+			default => "en-us",
+		};
 		$header[] = "Accept-Language: " . $language;
 
 		$ch      = curl_init();
