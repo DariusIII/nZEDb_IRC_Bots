@@ -665,15 +665,11 @@ class IRCScraper extends IRCClient
 			$this->siftMatches($matches);
 		}
 	}
-
+	
 	/**
-	 * Check if we already have the PRE.
-	 *
-	 * @return bool True if we already have, false if we don't.
-	 *
-	 * @access protected
+	 * @return void
 	 */
-	protected function checkForDupe(): bool
+	protected function checkForDupe(): void
 	{
 		$this->OldPre = $this->db->queryOneRow(sprintf('SELECT category, size FROM predb WHERE md5 = %s', $this->CurPre['md5']));
 		if ($this->OldPre === false) {
