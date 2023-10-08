@@ -483,7 +483,7 @@ class IRCClient
 	 *
 	 * @access protected.
 	 */
-	protected function _joinChannel(string $channel, string $password): void
+	protected function _joinChannel(string $channel, string $password = ''): void
 	{
 		if ($password === '') {
 			$password = null;
