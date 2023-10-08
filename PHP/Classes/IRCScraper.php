@@ -12,13 +12,11 @@ class IRCScraper extends IRCClient
 	 * @access protected
 	 */
 	protected array $CurPre;
-
+	
 	/**
-	 * Array of old pre info.
-	 * @var array
-	 * @access protected
+	 * @var string|bool|array|\PDOStatement
 	 */
-	protected array $OldPre;
+	protected PDOStatement|array|bool $OldPre;
 
 	/**
 	 * List of groups and their ID's
