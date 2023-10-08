@@ -479,11 +479,11 @@ class IRCClient
 	 * Join a channel.
 	 *
 	 * @param  string  $channel
-	 * @param  string  $password
+	 * @param  string|null  $password
 	 *
 	 * @access protected.
 	 */
-	protected function _joinChannel(string $channel, string $password = ''): void
+	protected function _joinChannel(string $channel, ?string $password = ''): void
 	{
 		if ($password === '') {
 			$password = null;
