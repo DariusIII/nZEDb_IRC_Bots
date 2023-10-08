@@ -678,7 +678,7 @@ class IRCScraper extends IRCClient
 	protected function checkForDupe(): bool
 	{
 		$this->OldPre = $this->db->queryOneRow(sprintf('SELECT category, size FROM predb WHERE md5 = %s', $this->CurPre['md5']));
-		if ($this->OldPre === false) {
+		if (empty($this->OldPre)) {
 			$this->insertNewPre();
 		} else {
 			$this->updatePre();
