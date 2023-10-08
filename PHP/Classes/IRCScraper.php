@@ -16,7 +16,7 @@ class IRCScraper extends IRCClient
 	/**
 	 * @var string|bool|array|\PDOStatement
 	 */
-	protected PDOStatement|array|bool $OldPre;
+	protected string|bool|array|PDOStatement $OldPre;
 
 	/**
 	 * List of groups and their ID's
@@ -676,7 +676,7 @@ class IRCScraper extends IRCClient
 	protected function checkForDupe(): bool
 	{
 		$this->OldPre = $this->db->queryOneRow(sprintf('SELECT category, size FROM predb WHERE md5 = %s', $this->CurPre['md5']));
-		if (empty($this->OldPre)) {
+		if ($this->OldPre === false) {
 			$this->insertNewPre();
 		} else {
 			$this->updatePre();
