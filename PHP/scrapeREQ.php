@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 // Scrape Request ID's from EFNet IRC.

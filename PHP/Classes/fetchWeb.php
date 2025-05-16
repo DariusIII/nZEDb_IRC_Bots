@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 require_once('DB.php');
@@ -27,15 +28,21 @@ class fetchWeb
 
     public function __construct()
     {
-        if (FETCH_SRRDB) { $this->activeSources++; }
-        if (FETCH_XREL) { $this->activeSources++; }
-        if (FETCH_XREL_P2P) { $this->activeSources++; }
-        
+        if (FETCH_SRRDB) {
+            $this->activeSources++;
+        }
+        if (FETCH_XREL) {
+            $this->activeSources++;
+        }
+        if (FETCH_XREL_P2P) {
+            $this->activeSources++;
+        }
+
         if (!$this->activeSources) {
             sleep(WEB_SLEEP_TIME);
             return;
         }
-        
+
         $this->sleepTime = WEB_SLEEP_TIME / $this->activeSources;
         $this->db = new \nzedb\db\DB();
         $this->start();
@@ -43,7 +50,7 @@ class fetchWeb
 
     protected function start(): void
     {
-        while(true) {
+        while (true) {
             if (FETCH_SRRDB) {
                 $this->retrieveSrr();
             }
@@ -70,18 +77,18 @@ class fetchWeb
     {
         echo "Fetching SrrDB\n";
         $data = $this->getUrl("https://www.srrdb.com/feed/srrs");
-        
+
         if ($data === false) {
             echo "Update from Srr failed.\n";
             return;
         }
-        
+
         $xml = @simplexml_load_string($data);
         if ($xml === false) {
             echo "Update from Srr failed: Invalid XML.\n";
             return;
         }
-        
+
         $this->db->ping(true);
         foreach ($xml->channel->item as $release) {
             $result = [
@@ -101,18 +108,18 @@ class fetchWeb
     {
         echo "Fetching Xrel\n";
         $data = $this->getUrl("https://api.xrel.to/v2/release/latest.json?per_page=100");
-        
+
         if ($data === false) {
             echo "Update from Xrel failed.\n";
             return;
         }
-        
+
         $json = json_decode($data);
         if (!$json) {
             echo "Update from Xrel failed: Invalid JSON.\n";
             return;
         }
-        
+
         $this->db->ping(true);
         foreach ($json->list as $release) {
             $result = [
@@ -120,11 +127,11 @@ class fetchWeb
                 'date' => (int)trim((string)$release->time),
                 'source' => 'xrel'
             ];
-            
+
             if (isset($release->size->number, $release->size->unit)) {
                 $result['size'] = trim((string)$release->size->number) . trim((string)$release->size->unit);
             }
-            
+
             $this->verifyPreData($result);
         }
         $this->echoDone();
@@ -137,18 +144,18 @@ class fetchWeb
     {
         echo "Fetching XrelP2P\n";
         $data = $this->getUrl("https://api.xrel.to/v2/p2p/releases.json?per_page=100");
-        
+
         if ($data === false) {
             echo "Update from XrelP2P failed.\n";
             return;
         }
-        
+
         $json = json_decode($data);
         if (!$json) {
             echo "Update from XrelP2P failed: Invalid JSON.\n";
             return;
         }
-        
+
         $this->db->ping(true);
         foreach ($json->list as $release) {
             $result = [
@@ -156,16 +163,16 @@ class fetchWeb
                 'date' => (int)trim((string)$release->pub_time),
                 'source' => 'xrelp2p'
             ];
-            
+
             if (isset($release->size_mb)) {
                 $result['size'] = trim((string)$release->size_mb) . "MB";
             }
-            
+
             if (isset($release->category->meta_cat, $release->category->sub_cat)) {
                 $result['category'] = ucfirst(trim((string)$release->category->meta_cat)) .
                                      " " . trim((string)$release->category->sub_cat);
             }
-            
+
             $this->verifyPreData($result);
         }
         $this->echoDone();
@@ -193,7 +200,8 @@ class fetchWeb
 
         if ($duplicateCheck === false) {
             $this->db->queryExec(
-                sprintf('
+                sprintf(
+                    '
                     INSERT INTO predb (title, size, category, predate, source, requestid, groupid, files, filename, nuked, nukereason, shared)
                     VALUES (%s, %s, %s, %s, %s, %d, %d, %s, %s, %d, %s, -1)',
                     $this->db->escapeString($matches['title']),
@@ -246,7 +254,7 @@ class fetchWeb
         if (empty($oldValue) && !empty($newValue)) {
             return $sqlKey . ' = ' . ($escape ? $this->db->escapeString($newValue) : $newValue) . ', ';
         }
-        
+
         return '';
     }
 
@@ -278,7 +286,7 @@ class fetchWeb
             'en' => 'en',
             default => 'en-us',
         };
-        
+
         $header = ["Accept-Language: $language"];
 
         $ch = curl_init();
@@ -324,7 +332,7 @@ class fetchWeb
         if ($err !== 0 || $buffer === false) {
             return false;
         }
-        
+
         return $buffer;
     }
 }

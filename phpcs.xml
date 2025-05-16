@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ruleset name="NZEDb IRC Bots Coding Standard">
+    <description>Coding standard for NZEDb IRC Bots project</description>
+
+    <!-- Display progress and show sniff names -->
+    <arg value="ps"/>
+    <arg name="colors"/>
+
+    <!-- Scan PHP files only -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Scan directories -->
+    <file>PHP</file>
+
+    <!-- Exclude vendor directory -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <!-- Use PSR-12 coding standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Use PSR-4 for naming classes -->
+    <rule ref="PSR1.Classes.ClassDeclaration"/>
+
+    <!-- Allow for longer lines than PSR-2 -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="0"/>
+        </properties>
+    </rule>
+
+    <!-- Enforce tabs being replaced by spaces -->
+    <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+
+    <!-- Ensure proper array formatting -->
+    <rule ref="Generic.Arrays.ArrayIndent"/>
+    <rule ref="Squiz.Arrays.ArrayDeclaration.KeyNotAligned">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Enforce proper docblock formatting -->
+    <rule ref="PEAR.Commenting.ClassComment"/>
+    <rule ref="PEAR.Commenting.FunctionComment"/>
+</ruleset>

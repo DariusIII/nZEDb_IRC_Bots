@@ -1,0 +1,27 @@
+# phpstan.neon
+parameters:
+	level: 5
+	paths:
+		- PHP
+	excludePaths:
+		- vendor/*
+		- node_modules/*
+	ignoreErrors:
+		# Replace deprecated options with newer error identifiers
+		-
+			identifier: missingType.iterableValue
+		-
+			identifier: missingType.generics
+		# Add specific error patterns to ignore if needed
+		#- '#Call to an undefined method [a-zA-Z0-9\\_]+::[a-zA-Z0-9\\_]+\(\)#'
+	tmpDir: var/cache/phpstan
+	reportUnmatchedIgnoredErrors: false
+	treatPhpDocTypesAsCertain: false
+	bootstrapFiles:
+		# Add any bootstrap files if needed
+	dynamicConstantNames:
+		- PHP_VERSION
+
+includes:
+	# Include additional rule sets if needed
+	#- vendor/phpstan/phpstan-strict-rules/rules.neon
