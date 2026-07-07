@@ -30,12 +30,16 @@ From CLI, import the schema: `mysql -p ircpredb < schema_predb.sql`
 This database is used to store and retrieve PRE info fetched from IRC and web sources.
 You can periodically delete old rows (older than 24 hours) to save space in this database, you can write a simple bash script to do this, optimizing afterwards is recommended too.
 
-Copy PHP/settings.example.php to PHP/settings.php
+Copy `.env.example` to `.env`.
 
-Edit PHP/settings.php
+Edit `.env`.
 
 
-Fill in all the settings for scrapeIRC, postIRC and scrapeWEB.
+Fill in the `PRE_DB_*`, scrapeIRC, postIRC, scrapeWEB, and optional M2V settings.
+
+IRC channel maps use JSON objects in `.env`. Keys are channel names and values are either `null` or the channel password, for example:
+
+`EFNET_BOT_CHANNELS='{"#alt.binaries.inner-sanctum":null,"#private":"secret"}'`
 
 
 You will use the following scripts:
@@ -53,8 +57,26 @@ PHP/postIRC.php : This will print out the PRE info onto a IRC channel as scrapeI
 
 You can edit run_irc.sh to run these and periodically check they are still running. You can add this to a service/cron to run on boot.
 
+Modern service runner:
 
-This system is compatible with the nZEDb IRCscraper scripts. You can add your server to the nZEDb IRCscraper settings.php, note your channel should be named #nZEDbPRE unless you edit nZEDb to use your own channel name.
+`php bin/irc-service post`
+`php bin/irc-service scrape-efnet --silent`
+`php bin/irc-service scrape-corrupt --silent`
+`php bin/irc-service fetch-web`
+
+A sample systemd template is provided at `resources/systemd/nzedb-irc@.service`. Copy it to `/etc/systemd/system/`, adjust `WorkingDirectory`, `ExecStart`, `User`, and `Group`, then enable workers such as:
+
+`systemctl enable --now nzedb-irc@post.service`
+`systemctl enable --now nzedb-irc@scrape-efnet.service`
+`systemctl enable --now nzedb-irc@scrape-corrupt.service`
+`systemctl enable --now nzedb-irc@fetch-web.service`
+
+If you use a systemd environment file, point it at your deployment `.env` and keep permissions restricted because it contains database and IRC credentials.
+
+For existing PRE databases, review and run `schema_predb_upgrade.sql` after checking for duplicate titles that would conflict with the new unique key.
+
+
+This system is compatible with the nZEDb IRCscraper scripts. You can add your server to the nZEDb IRCscraper configuration, note your channel should be named #nZEDbPRE unless you edit nZEDb to use your own channel name.
 
 
 ##Request ID web page instructions
@@ -66,10 +88,10 @@ Create a database in MySQL: `create database reqpredb;`
 From CLI, import the schema: `mysql -p reqpredb < schema_reqid.sql`
 
 
-Edit PHP/settings.php
+Edit `.env`.
 
 
-Fill in the settings for scrapeREQ.php (near the bottom of the file).
+Fill in the `REQ_DB_*` and `REQID_BOT_*` settings.
 
 
 You will run the following script:
@@ -79,6 +101,18 @@ PHP/scrapeREQ.php ; This will run bots on the Efnet IRC server to fetch Request 
 
 
 You can edit/run run_reqid.sh to run the bot and periodically check if it is running. You can add this in a service or cron job to run on boot.
+
+Modern service runner:
+
+`php bin/irc-service scrape-reqid --silent`
+
+The request-ID channel map also uses JSON:
+
+`REQID_BOT_CHANNELS='{"#alt.binaries.inner-sanctum":null,"#private":"secret"}'`
+
+For systemd, use the same `resources/systemd/nzedb-irc@.service` template and enable `nzedb-irc@scrape-reqid.service`.
+
+For existing request-ID databases, review and run `schema_reqid_upgrade.sql` after checking for duplicate `(title, groupname)` rows that would conflict with the new unique key.
 
 
 You can add a "require" to your index.php file to serve Request ID lookups. Like this: `require('/path/to/PHP/WWW/reqid.php');` changing `/path/to` to where you cloned this git.

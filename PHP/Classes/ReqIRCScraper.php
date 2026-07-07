@@ -62,7 +62,8 @@ class ReqIRCScraper extends IRCClient
         }
 
         // Join channels.
-        $this->joinChannels(unserialize(REQID_BOT_CHANNELS));
+        $configuredChannels = unserialize(REQID_BOT_CHANNELS, ['allowed_classes' => false]);
+        $this->joinChannels(is_array($configuredChannels) ? $configuredChannels : []);
 
         if (!$this->silent) {
             echo
@@ -118,12 +119,12 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/ReqId:\[(?P<reqid>\d+)\]\s+\[.+?\]\s+\[FULL\s+(?P<files>\d+x\d+[KMGTP]?B)\s+(?P<title>.+?)\].+?Size:\[(?P<size>.+?)\](.+?\[Pred\s+(?P<predago>.+?)\s+ago\])?(.+?\[(?P<nuke>(MOD|OLD|RE|UN)?NUKE)D\])?/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.erotica';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif (preg_match('/\[(?P<nuke>(MOD|OLD|RE|UN)?NUKE)\]\s+ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<title>.+?)\]\s+Reason:\[(?P<reason>.+?)]/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.erotica';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -136,12 +137,12 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/Request\s+Filled!\s+ReqId:\[(?P<reqid>\d+)\]\s+\[FULL\s+(?P<files>\d+x\d+[KMGTP]?B)\s+(?P<title>.+?)\].*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.sounds.flac';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif (preg_match('/\[(?P<nuke>(MOD|OLD|RE|UN)?NUKE)\]\s+ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<title>.+?)\]\s+Reason:\[(?P<reason>.+?)\]/', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.sounds.flac';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -154,12 +155,12 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/ReqId:\[(?P<reqid>\d+)\]\s+\[FULL\s+(?P<files>\d+x\d+[MGPTK]?B)\s+(?P<title>.+?)\]\s+.*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.moovee';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif (preg_match('/\[(?P<nuke>(MOD|OLD|RE|UN)?NUKE)\]\s+ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<title>.+?)\]\s+Reason:\[(?P<reason>.+?)\]/', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.moovee';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -172,12 +173,12 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<category>.+?)\]\s+\[FULL\s+(?P<files>\d+x\d+[MGPTK]?B)\s+(?P<title>.+?)\]\s+.*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.mom';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif (preg_match('/\[(?P<nuke>(MOD|OLD|RE|UN)?NUKE)\]\s+ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<title>.+?)\]\s+Reason:\[(?P<reason>.+?)\]/', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.mom';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -190,12 +191,12 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/Request\s+Filled!\s+ReqId:\[(?P<reqid>\d+)\]\s+\[FULL\s+(?P<files>\d+x\d+[KMGPT]?B)\s+(?P<title>.+?)\].*?(\[Pred\s+(?P<predago>.+?)\s+ago\])?/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.teevee';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif (preg_match('/\[(?P<nuke>(MOD|OLD|RE|UN)?NUKE)\]\s+ReqId:\[(?P<reqid>\d+)\]\s+\[(?P<title>.+?)\]\s+Reason:\[(?P<reason>.+?)\]/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.teevee';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -208,7 +209,7 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/\s+FULL\s+\d+\s+(?P<title>.+?)\s+(?P<files>\d+x\d+[KMGTP]?B)\s+.+?\]\[ReqID:\s+(?P<reqid>\d+)\]\[/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.console.ps3';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -221,12 +222,12 @@ class ReqIRCScraper extends IRCClient
     {
         if ($this->checkSimilarity($poster, 'googlebot') && preg_match('/A\s+new\s+NZB\s+has\s+been\s+added:\s+(?P<title>.+?)\s+.+?(?P<files>\d+x\d+[KMGTP]?B)\s+-\s+To.+?file:\s+-sendnzb\s+(?P<reqid>\d+)\s*/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.games.wii';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif ($this->checkSimilarity($poster, 'binarybot') && preg_match('/added\s+(nuke|reason)\s+info\s+for:\s+(?P<title>.+?)\]\[VCID:\s+(?P<reqid>\d+)\]\[Value:\s+(?P<reason>.+?)\]/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.games.wii';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -239,12 +240,12 @@ class ReqIRCScraper extends IRCClient
     {
         if ($this->checkSimilarity($poster, 'googlebot') && preg_match('/A\s+new\s+NZB\s+has\s+been\s+added:\s+(?P<title>.+?)\s+.+?(?P<files>\d+x\d+[KMGTP]?B)\s+-\s+To.+?file:\s+-sendnzb\s+(?P<reqid>\d+)\s*/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.games.xbox360';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         } elseif ($this->checkSimilarity($poster, 'binarybot') && preg_match('/added\s+(nuke|reason)\s+info\s+for:\s+(?P<title>.+?)\]\[VCID:\s+(?P<reqid>\d+)\]\[Value:\s+(?P<reason>.+?)\]/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.games.xbox360';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -257,7 +258,7 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/A NZB is available:\s(?P<title>.+?)\s+.+?(?P<files>\d+x\d+[KMGPT]?B)\s+-.+?file:\s+-sendnzb\s+(?P<reqid>\d+)\s*/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.sony.psp';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -270,8 +271,8 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/NEW\s+\[NDS\]\s+PRE:\s+(?P<title>.+)/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.games.nintendods';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
-            $this->curPre['reqid'] = $matches['reqid'] ?? '';
+            $this->curPre['title'] = (string) $matches['title'];
+            $this->curPre['reqid'] = '';
             $this->checkForDupe();
         }
     }
@@ -283,7 +284,7 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/\[Complete\]\[(?P<reqid>\d+)\]\s*(?P<title>.+?)\s+NZB:/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.boneless';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -296,7 +297,7 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/FILLED\]\s+\[\s+(?P<reqid>\d+)\s+\|\s+(?P<title>.+?)\s+\|\s+(?P<files>\d+x\d+)\s+\|\s+(?P<category>.+?)\s+\|\s+.+?\s+\]\s+\[\s+Pred\s+(?P<predago>.+?)\s+ago\s+\]/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = 'alt.binaries.inner-sanctum';
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -309,7 +310,7 @@ class ReqIRCScraper extends IRCClient
     {
         if (preg_match('/Req.+?Id.*?<.*?(?P<reqid>\d+).*?>.*?Request.*?<\d{0,2}(?P<title>.+?)(\s+\*Pars\s+Included\*\d{0,2}>|\d{0,2}>)\s+Files<(?P<files>\d+)>/i', $this->channelData['message'], $matches)) {
             $this->curPre['source'] = str_replace('#alt.binaries', 'alt.binaries', $channel);
-            $this->curPre['title'] = $this->db->escapeString($matches['title']);
+            $this->curPre['title'] = (string) $matches['title'];
             $this->curPre['reqid'] = $matches['reqid'];
             $this->checkForDupe();
         }
@@ -320,7 +321,11 @@ class ReqIRCScraper extends IRCClient
      */
     protected function checkForDupe(): bool
     {
-        if ($this->db->queryOneRow(sprintf('SELECT reqid FROM predb WHERE title = %s', $this->curPre['title'])) === false) {
+        if (
+            $this->db->queryOneRow(
+                sprintf('SELECT reqid FROM predb WHERE title = %s', $this->db->escapeString($this->curPre['title']))
+            ) === false
+        ) {
             $this->insertNewPre();
         } else {
             $this->updatePre();
@@ -335,13 +340,14 @@ class ReqIRCScraper extends IRCClient
     protected function insertNewPre(): void
     {
         $this->db->ping(true);
+        $reqId = is_numeric($this->curPre['reqid']) ? (int) $this->curPre['reqid'] : 0;
 
         $this->db->queryExec(
             sprintf(
                 'INSERT INTO predb (groupname, reqid, title) VALUES (%s, %s, %s)',
                 $this->db->escapeString($this->curPre['source']),
-                $this->curPre['reqid'],
-                $this->curPre['title']
+                $reqId,
+                $this->db->escapeString($this->curPre['title'])
             )
         );
 
@@ -355,13 +361,14 @@ class ReqIRCScraper extends IRCClient
     protected function updatePre(): void
     {
         $this->db->ping(true);
+        $reqId = is_numeric($this->curPre['reqid']) ? (int) $this->curPre['reqid'] : 0;
 
         $this->db->queryExec(
             sprintf(
                 'UPDATE predb SET groupname = %s, reqid = %s WHERE title = %s',
                 $this->db->escapeString($this->curPre['source']),
-                $this->curPre['reqid'],
-                $this->curPre['title']
+                $reqId,
+                $this->db->escapeString($this->curPre['title'])
             )
         );
 

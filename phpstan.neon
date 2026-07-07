@@ -1,11 +1,12 @@
 # phpstan.neon
 parameters:
-	level: 5
+	level: 9
 	paths:
 		- PHP
 	excludePaths:
 		- vendor/*
 		- node_modules/*
+		- PHP/settings.example.php
 	ignoreErrors:
 		# Replace deprecated options with newer error identifiers
 		-
@@ -18,9 +19,19 @@ parameters:
 	reportUnmatchedIgnoredErrors: false
 	treatPhpDocTypesAsCertain: false
 	bootstrapFiles:
-		# Add any bootstrap files if needed
+		- phpstan-bootstrap.php
 	dynamicConstantNames:
 		- PHP_VERSION
+		- FETCH_SRRDB
+		- FETCH_XREL
+		- FETCH_XREL_P2P
+		- POST_BOT_BOX_COLOR
+		- POST_BOT_INNER_COLOR
+		- EFNET_BOT_DEBUG
+		- CORRUPT_BOT_DEBUG
+		- M2VRU_RSS_LINK
+		- M2V_SLEEP_TIME
+		- M2VRU_THROTTLE_USLEEP
 
 includes:
 	# Include additional rule sets if needed

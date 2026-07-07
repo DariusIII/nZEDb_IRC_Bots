@@ -43,11 +43,14 @@ DROP TABLE IF EXISTS groups;
 	    dumped BOOLEAN NOT NULL DEFAULT FALSE,
 	    shared BOOLEAN NOT NULL DEFAULT FALSE,
 	    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
 	    PRIMARY KEY (id),
-	    KEY idx_predb_title (title),
+	    UNIQUE KEY uk_predb_title (title),
+	    KEY idx_predb_md5 (md5),
 	    KEY idx_predb_predate (predate),
 	    KEY idx_predb_source (source),
 	    KEY idx_predb_request (requestid, groupid),
+	    KEY idx_predb_shared_predate (shared, predate),
 	    CONSTRAINT fk_predb_group FOREIGN KEY (groupid) REFERENCES groups (id) ON DELETE CASCADE ON UPDATE CASCADE
 	) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci AUTO_INCREMENT=1
 	  COMMENT 'Pre-database releases information';

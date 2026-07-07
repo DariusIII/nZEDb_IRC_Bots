@@ -1,0 +1,38 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use App\Service\LegacyIrcService;
+use App\Service\WorkerType;
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$command = $argv[1] ?? '';
+$silent = in_array('--silent', $argv, true);
+
+if ($command === '' || in_array($command, ['-h', '--help', 'help'], true)) {
+    fwrite(STDERR, sprintf(
+        "Usage: php bin/irc-service <%s> [--silent]\n",
+        WorkerType::usageList()
+    ));
+    exit($command === '' ? 1 : 0);
+}
+
+$worker = WorkerType::tryFrom($command);
+
+if (!$worker instanceof WorkerType) {
+    fwrite(STDERR, sprintf(
+        "Unknown worker '%s'. Expected one of: %s\n",
+        $command,
+        WorkerType::usageList()
+    ));
+    exit(1);
+}
+
+try {
+    exit((new LegacyIrcService())->run($worker, $silent));
+} catch (Throwable $e) {
+    fwrite(STDERR, $e->getMessage() . PHP_EOL);
+    exit(1);
+}

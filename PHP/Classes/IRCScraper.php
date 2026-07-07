@@ -18,7 +18,7 @@ class IRCScraper extends IRCClient
  /**
   * Previous pre information.
   */
-    protected string|bool|array|\PDOStatement $oldPre = [];
+    protected array|bool $oldPre = [];
 
  /**
   * List of groups and their ID's
@@ -86,7 +86,8 @@ class IRCScraper extends IRCClient
                 $realName = EFNET_BOT_REALNAME;
                 $password = EFNET_BOT_PASSWORD;
                 $tls      = EFNET_BOT_ENCRYPTION;
-                $channelList = unserialize(EFNET_BOT_CHANNELS);
+                $configuredChannels = unserialize(EFNET_BOT_CHANNELS, ['allowed_classes' => false]);
+                $channelList = is_array($configuredChannels) ? $configuredChannels : [];
                 break;
 
             case 'corrupt':

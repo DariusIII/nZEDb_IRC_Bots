@@ -16,7 +16,8 @@ if ($argv[1] === 'efnet') {
     define('corrupt_bot_settings', true);
 }
 
-require_once(__DIR__ . '/settings.php');
+require_once(__DIR__ . '/../vendor/autoload.php');
+\App\Config\LegacySettings::load();
 require_once(__DIR__ . '/Classes/IRCScraper.php');
 
 // Initialize and run the IRC scraper

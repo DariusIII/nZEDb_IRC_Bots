@@ -1,0 +1,20 @@
+[Unit]
+Description=nZEDb IRC bot worker (%i)
+After=network-online.target mariadb.service mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/nZEDb_IRC_Bots
+# Optional: point this at a root-owned copy of your project .env.
+# EnvironmentFile=/etc/nzedb-irc/%i.env
+ExecStart=/usr/bin/php /opt/nZEDb_IRC_Bots/bin/irc-service %i
+Restart=always
+RestartSec=10
+User=nzedb
+Group=nzedb
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

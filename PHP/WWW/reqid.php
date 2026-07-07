@@ -4,13 +4,15 @@
 
                     const req_settings = true;
 
+                    require_once(__DIR__ . '/../../vendor/autoload.php');
+                    \App\Config\LegacySettings::load();
+
                     $preData = false;
 
 if (isset($_POST['data'])) {
     $data = @unserialize($_POST['data'], ['allowed_classes' => false]);
 
     if ($data !== false && is_array($data) && isset($data[0]['ident'])) {
-        require(__DIR__ . '/../settings.php');
         require(__DIR__ . '/../Classes/DB.php');
         $db = new \nzedb\db\DB();
 
@@ -35,7 +37,6 @@ if (isset($_POST['data'])) {
         }
     }
 } elseif (isset($_GET['reqid'], $_GET['group']) && is_numeric($_GET['reqid'])) {
-    require(__DIR__ . '/../settings.php');
     require(__DIR__ . '/../Classes/DB.php');
     $db = new \nzedb\db\DB();
 

@@ -26,8 +26,12 @@ class fetchWeb
      */
     protected float $sleepTime;
 
+    protected bool $stopRequested = false;
+
     public function __construct()
     {
+        $this->db = new \nzedb\db\DB();
+
         if (FETCH_SRRDB) {
             $this->activeSources++;
         }
@@ -44,13 +48,14 @@ class fetchWeb
         }
 
         $this->sleepTime = WEB_SLEEP_TIME / $this->activeSources;
-        $this->db = new \nzedb\db\DB();
         $this->start();
     }
 
     protected function start(): void
     {
-        while (true) {
+        $this->installSignalHandlers();
+
+        while (!$this->stopRequested) {
             if (FETCH_SRRDB) {
                 $this->retrieveSrr();
             }
@@ -61,6 +66,22 @@ class fetchWeb
                 $this->retrieveXrelP2P();
             }
         }
+    }
+
+    protected function stop(): void
+    {
+        $this->stopRequested = true;
+    }
+
+    protected function installSignalHandlers(): void
+    {
+        if (!function_exists('pcntl_async_signals') || !function_exists('pcntl_signal')) {
+            return;
+        }
+
+        pcntl_async_signals(true);
+        pcntl_signal(SIGTERM, fn () => $this->stop());
+        pcntl_signal(SIGINT, fn () => $this->stop());
     }
 
     protected function echoDone(): void
@@ -115,7 +136,7 @@ class fetchWeb
         }
 
         $json = json_decode($data);
-        if (!$json) {
+        if (!is_object($json) || !isset($json->list) || !is_iterable($json->list)) {
             echo "Update from Xrel failed: Invalid JSON.\n";
             return;
         }
@@ -151,7 +172,7 @@ class fetchWeb
         }
 
         $json = json_decode($data);
-        if (!$json) {
+        if (!is_object($json) || !isset($json->list) || !is_iterable($json->list)) {
             echo "Update from XrelP2P failed: Invalid JSON.\n";
             return;
         }
@@ -207,7 +228,7 @@ class fetchWeb
                     $this->db->escapeString($matches['title']),
                     (isset($matches['size']) && $matches['size'] !== '') ? $this->db->escapeString($matches['size']) : 'NULL',
                     (isset($matches['category']) && $matches['category'] !== '') ? $this->db->escapeString($matches['category']) : 'NULL',
-                    $this->db->from_unixtime($matches['date']),
+                    $this->db->from_unixtime((int) $matches['date']),
                     $this->db->escapeString($matches['source']),
                     (isset($matches['requestid']) && is_numeric($matches['requestid'])) ? (int)$matches['requestid'] : 0,
                     (isset($matches['groupid']) && is_numeric($matches['groupid'])) ? (int)$matches['groupid'] : 0,
@@ -236,7 +257,7 @@ class fetchWeb
 
             $this->done++;
 
-            $query .= 'predate = ' . $this->db->from_unixtime($matches['date']) . ', ';
+            $query .= 'predate = ' . $this->db->from_unixtime((int) $matches['date']) . ', ';
             $query .= 'source = ' . $this->db->escapeString($matches['source']) . ', ';
             $query .= 'title = ' . $this->db->escapeString($matches['title']);
             $query .= ', shared = -1';
@@ -252,7 +273,13 @@ class fetchWeb
     protected function updateString(string $sqlKey, mixed $oldValue, mixed $newValue, bool $escape = true): string
     {
         if (empty($oldValue) && !empty($newValue)) {
-            return $sqlKey . ' = ' . ($escape ? $this->db->escapeString($newValue) : $newValue) . ', ';
+            $value = is_scalar($newValue) ? (string) $newValue : '';
+
+            if ($value === '') {
+                return '';
+            }
+
+            return $sqlKey . ' = ' . ($escape ? $this->db->escapeString($value) : $value) . ', ';
         }
 
         return '';
@@ -333,6 +360,6 @@ class fetchWeb
             return false;
         }
 
-        return $buffer;
+        return is_string($buffer) ? $buffer : false;
     }
 }

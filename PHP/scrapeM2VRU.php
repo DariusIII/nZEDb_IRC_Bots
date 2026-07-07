@@ -5,7 +5,8 @@
     const pre_settings = true;
     const m2v_settings = true;
 
-    require_once(__DIR__ . '/settings.php');
+    require_once(__DIR__ . '/../vendor/autoload.php');
+    \App\Config\LegacySettings::load();
     require_once(__DIR__ . '/Classes/DB.php');
 
     $db = new \nzedb\db\DB();
@@ -39,7 +40,7 @@ for (;;) {
             continue;
         }
 
-        $itemData = getUrl($item->link);
+        $itemData = getUrl((string) $item->link);
         if (!$itemData) {
             echo "Error downloading page: '{$item->title}'\nSkipping.\n";
             usleep(M2VRU_THROTTLE_USLEEP);
@@ -123,9 +124,9 @@ function sleepPrintout(int $seconds): void
      *
      * @param string $url   The URL to download
      * @param bool   $debug Show debug info
-     * @return string|bool Page content or false on failure
+ * @return string|false Page content or false on failure
      */
-function getUrl(string $url, bool $debug = false): string|bool
+function getUrl(string $url, bool $debug = false): string|false
 {
     $ch = curl_init();
     $options = [
@@ -154,9 +155,9 @@ function getUrl(string $url, bool $debug = false): string|bool
     $err = curl_errno($ch);
     curl_close($ch);
 
-    if ($err !== 0) {
+    if ($err !== 0 || $buffer === false) {
         return false;
     }
 
-    return $buffer;
+    return is_string($buffer) ? $buffer : false;
 }

@@ -31,10 +31,12 @@ DROP TABLE IF EXISTS groups;
 	    groupname VARCHAR(255) NOT NULL,
 	    reqid INT UNSIGNED NOT NULL DEFAULT 0,
 	    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
 	    PRIMARY KEY (id),
-	    KEY idx_predb_title (title),
+	    UNIQUE KEY uk_predb_title_group (title, groupname),
 	    KEY idx_predb_reqid (reqid),
 	    KEY idx_predb_groupname (groupname),
+	    KEY idx_predb_group_reqid (groupname, reqid),
 	    CONSTRAINT fk_predb_groupname FOREIGN KEY (groupname) REFERENCES groups (name)
 	        ON DELETE CASCADE ON UPDATE CASCADE
 	) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci AUTO_INCREMENT=1

@@ -68,7 +68,7 @@ class IRCClient
     /**
      * Buffer contents.
      */
-    protected ?string $buffer = null;
+    protected string $buffer = '';
 
     /**
      * When someone types something into a channel, buffer it.
@@ -130,6 +130,11 @@ class IRCClient
      * How many attempts have we tried to write to the socket?
      */
     protected int $writeAttempts = 0;
+
+    /**
+     * Requested by signal handlers when the worker should stop.
+     */
+    protected bool $stopRequested = false;
 
     /**
      * Disconnect from IRC.
@@ -196,20 +201,21 @@ class IRCClient
      * @param int    $port     Port number of the IRC server.
      * @param bool   $tls      Use encryption for the socket transport? (make sure the port is right).
      */
-    public function connect(string $hostname, int $port = 6667, bool $tls = false): bool
+    public function connect(string $hostname, int|string $port = 6667, bool $tls = false): bool
     {
         $this->alreadyLoggedIn = false;
+        if (!is_numeric($port)) {
+            echo 'ERROR: IRC port must be a number!' . PHP_EOL;
+            return false;
+        }
+
+        $port = (int) $port;
         $transport = $tls ? 'tls' : 'tcp';
 
         $socketString = "{$transport}://{$hostname}:{$port}";
         if ($socketString !== $this->remoteSocketString || !$this->isConnected()) {
             if ($hostname === '') {
                 echo 'ERROR: IRC host name must not be empty!' . PHP_EOL;
-                return false;
-            }
-
-            if (!is_numeric($port)) {
-                echo 'ERROR: IRC port must be a number!' . PHP_EOL;
                 return false;
             }
 
@@ -333,7 +339,9 @@ class IRCClient
      */
     public function readIncoming(): void
     {
-        while (true) {
+        $this->installSignalHandlers();
+
+        while (!$this->stopRequested) {
             $this->readSocket();
 
             // If the server pings us, return it a pong.
@@ -466,10 +474,19 @@ class IRCClient
      */
     protected function readSocket(): void
     {
+        if (!is_resource($this->socket)) {
+            $this->buffer = '';
+            return;
+        }
+
         $buffer = '';
         do {
             stream_set_timeout($this->socket, $this->socketTimeout);
-            $buffer .= fgets($this->socket, 1024);
+            $line = fgets($this->socket, 1024);
+            if ($line === false) {
+                break;
+            }
+            $buffer .= $line;
         } while (!empty($buffer) && !preg_match('/\v+$/', $buffer));
         $this->buffer = trim($buffer);
 
@@ -483,6 +500,11 @@ class IRCClient
      */
     protected function writeSocket(string $command): bool
     {
+        if (!is_resource($this->socket)) {
+            echo 'ERROR: Could not write to socket because IRC is not connected.' . PHP_EOL;
+            return false;
+        }
+
         $command .= "\r\n";
         for ($written = 0; $written < strlen($command); $written += $fWrite) {
             stream_set_timeout($this->socket, $this->socketTimeout);
@@ -521,6 +543,10 @@ class IRCClient
      */
     protected function writeSocketChar(string $character): bool|int
     {
+        if (!is_resource($this->socket)) {
+            return false;
+        }
+
         return @fwrite($this->socket, $character);
     }
 
@@ -563,6 +589,23 @@ class IRCClient
         return (is_resource($this->socket) && !feof($this->socket));
     }
 
+    public function stop(): void
+    {
+        $this->stopRequested = true;
+        $this->quit('Service stopping');
+    }
+
+    protected function installSignalHandlers(): void
+    {
+        if (!function_exists('pcntl_async_signals') || !function_exists('pcntl_signal')) {
+            return;
+        }
+
+        pcntl_async_signals(true);
+        pcntl_signal(SIGTERM, fn () => $this->stop());
+        pcntl_signal(SIGINT, fn () => $this->stop());
+    }
+
     /**
      * Strips control characters from a IRC message.
      */
@@ -579,6 +622,6 @@ class IRCClient
             ],
             '',
             $text
-        );
+        ) ?? '';
     }
 }

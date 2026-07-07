@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use JetBrains\PhpStorm\NoReturn;
-
 require_once('DB.php');
 require_once('IRCClient.php');
 
@@ -115,11 +113,11 @@ class IRCServer extends IRCClient
     /**
      * Start sniffing for pre messages to post.
      */
-    #[NoReturn]
     protected function startSniffing(): void
     {
+        $this->installSignalHandlers();
         $time = time();
-        while (true) {
+        while (!$this->stopRequested) {
             if ($this->optimizeIterations++ === 300) {
                 $this->optimizeIterations = 0;
                 if (!empty($this->cleanupTime)) {
@@ -144,11 +142,21 @@ class IRCServer extends IRCClient
             if ($allPre) {
                 $time = time();
                 foreach ($allPre as $pre) {
+                    $preIdValue = $pre['id'] ?? 0;
+                    $preTitleValue = $pre['title'] ?? '';
+                    $preId = is_scalar($preIdValue) ? (int) $preIdValue : 0;
+                    $preTitle = is_scalar($preTitleValue) ? (string) $preTitleValue : '';
+
+                    if ($preId <= 0) {
+                        echo 'Skipping PRE row with invalid id.' . PHP_EOL;
+                        continue;
+                    }
+
                     if ($this->formatMessage($pre)) {
-                        echo "Posted [{$pre['title']}]" . PHP_EOL;
-                        $this->db->queryExec("UPDATE predb SET shared = 1 WHERE id = {$pre['id']}");
+                        echo "Posted [{$preTitle}]" . PHP_EOL;
+                        $this->db->queryExec("UPDATE predb SET shared = 1 WHERE id = {$preId}");
                     } else {
-                        echo "Error posting [{$pre['title']}]" . PHP_EOL;
+                        echo "Error posting [{$preTitle}]" . PHP_EOL;
                         $this->reconnect();
                         if (!$this->isConnected()) {
                             exit('IRC Error: The connection was lost and we could not reconnect.' . PHP_EOL);
